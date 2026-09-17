@@ -1,0 +1,106 @@
+import type { LevelDef } from '../sim/types';
+import { level } from './define';
+
+// The first lessons, one idea each. Hand-made and tiny on purpose.
+export const STARTER: readonly LevelDef[] = [
+  level(
+    { id: 'first-drink', name: 'First Drink', hint: 'Drag across the sand to dig a ditch from the spring to the plant.' },
+    [
+      '............',
+      '............',
+      '............',
+      '............',
+      '..S******P..',
+      '............',
+      '............',
+      '............',
+      '............',
+      '............',
+    ],
+  ),
+  level(
+    { id: 'around-the-rock', name: 'Around the Rock', hint: 'You can’t dig through rock. Go around it.' },
+    [
+      '............',
+      '............',
+      '.....#......',
+      '.....#......',
+      '..S..#...P..',
+      '..*..#...*..',
+      '..*..#...*..',
+      '..********..',
+      '............',
+      '............',
+    ],
+  ),
+  level(
+    { id: 'two-plants', name: 'Two Thirsty Plants', hint: 'One spring can feed two plants.' },
+    [
+      '............',
+      '............',
+      '............',
+      '..P.........',
+      '..*.........',
+      '..***S****..',
+      '.........*..',
+      '.........P..',
+      '............',
+      '............',
+    ],
+  ),
+  level(
+    { id: 'mind-the-hole', name: 'Mind the Hole', hint: 'The hole drinks any water that touches it. Keep your ditch away.' },
+    [
+      '............',
+      '............',
+      '............',
+      '............',
+      '..S...O..P..',
+      '..*......*..',
+      '..********..',
+      '............',
+      '............',
+      '............',
+    ],
+  ),
+  level(
+    {
+      id: 'share-the-ditch',
+      name: 'Share the Ditch',
+      hint: 'Not much digging left. Let both plants drink from one ditch.',
+      budget: 15,
+    },
+    [
+      '............',
+      '..........P.',
+      '.....******.',
+      '.....*#...*.',
+      '.S****#...*.',
+      '......#...*.',
+      '..........*.',
+      '..........P.',
+      '............',
+      '............',
+    ],
+  ),
+  level(
+    {
+      id: 'the-pond',
+      name: 'The Pond',
+      hint: 'The pond fills up first, then spills over. Block the old ditch that leaks.',
+      budget: 4,
+    },
+    [
+      '............',
+      '............',
+      '............',
+      '....uu......',
+      '.S**uu**P...',
+      '....uu......',
+      '.....x=O....',
+      '............',
+      '............',
+      '............',
+    ],
+  ),
+];

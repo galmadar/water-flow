@@ -33,7 +33,7 @@ const buttons = {
 const renderer = new Renderer(canvas);
 const modals = new Modals(document.body);
 
-let levelIndex = Math.min(Math.max(0, progress.currentLevel()), LEVELS.length - 1);
+let levelIndex = progress.currentLevel(LEVELS.map((l) => l.id));
 let tool: Tool = 'dig';
 let fast = false;
 let game = makeGame(levelIndex);
@@ -54,7 +54,7 @@ function loadLevel(index: number): void {
   levelIndex = index;
   game = makeGame(index);
   budgetNote = false;
-  progress.setCurrentLevel(index);
+  progress.setCurrentLevel(LEVELS[index].id, index);
   updateHud();
 }
 

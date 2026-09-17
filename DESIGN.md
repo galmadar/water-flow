@@ -70,30 +70,21 @@ still has to run. Levels won with help get ☆ instead of ★.
 
 ## Levels
 
+107 levels, easy to hard. The first six are lessons, one idea each:
+
 1. **First Drink** — straight ditch, spring to plant.
 2. **Around the Rock** — a rock wall in the way.
 3. **Two Thirsty Plants** — one spring, two branches.
 4. **Mind the Hole** — the straight way touches a hole; go one row wider.
 5. **Share the Ditch** — two plants, budget 15: they must share one ditch.
 6. **The Pond** — the pond fills and spills; fill the old ditch leaking into a hole. Budget 4.
-7. **Three Gardens** — three plants, budget 13.
-8. **Dry Maze** — fill the leaky ditch by the spring, then the long way round rocks and holes. Budget 22.
 
-## How it's built
+Then 101 more that mix those ideas: rocks and long detours, holes beside the
+short way, ponds, old ditches to reuse, leaky old ditches to fill, up to five
+plants, and tight dig budgets. The hand-made **Dry Maze** sits among them.
+The rest were made by a generator and checked by the level tests: each one has
+a known answer that wins within 15 seconds, and no two look alike, even
+mirrored or shifted.
 
-TypeScript + Vite + Vitest, Canvas 2D, like the other games here.
-
-- `src/sim/` — height map, water steps, digging, budget, undo. No drawing, no browser.
-- `src/content/` — the levels, each drawn as text with its answer marked.
-- `src/render/` — layout and drawing, scaled to fit the screen at full sharpness.
-- `src/input/` — pointer strokes (mouse, pen, touch) and the key table.
-- `src/shell/` — the running level, question boxes, saved progress.
-
-`npm test` checks `sim/` and `content/` stay pure, tests the water (runs
-downhill, pools, spills, conserves, drains) and plays every level's solution.
-
-## Not yet
-
-- Sound.
-- Deeper digging (more than one level down) and hills.
-- Level select screen.
+Progress remembers the level by name, so adding or reordering levels never
+moves a player somewhere else.
