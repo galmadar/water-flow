@@ -8,6 +8,7 @@ export type KeyAction =
   | { type: 'nextLevel' }
   | { type: 'prevLevel' }
   | { type: 'goToLevel' }
+  | { type: 'levels' }
   | { type: 'undo' }
   | { type: 'redo' }
   | { type: 'escape' }
@@ -44,6 +45,7 @@ export const KEYMAP: readonly Binding[] = [
   { keys: ['r'], mod: false, action: { type: 'restart' }, label: 'R', help: 'Start the level again' },
   { keys: ['n', ']'], mod: false, action: { type: 'nextLevel' }, label: 'N  ]', help: 'Next level' },
   { keys: ['p', '['], mod: false, action: { type: 'prevLevel' }, label: 'P  [', help: 'Previous level' },
+  { keys: ['l'], mod: false, action: { type: 'levels' }, label: 'L', help: 'Open or close the level list' },
   { keys: ['g'], mod: true, action: { type: 'goToLevel' }, label: 'Ctrl/Cmd G', help: 'Go to a level' },
   { keys: ['z'], mod: true, shift: false, action: { type: 'undo' }, label: 'Ctrl/Cmd Z', help: 'Undo' },
   { keys: ['z'], mod: true, shift: true, action: { type: 'redo' }, label: 'Ctrl/Cmd Shift Z', help: 'Redo' },

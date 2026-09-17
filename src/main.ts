@@ -4,6 +4,7 @@ import { PointerInput, type PointerHandlers } from './input/PointerInput';
 import { CANVAS_H, CANVAS_W } from './render/layout';
 import { Renderer } from './render/Renderer';
 import { Game, type GameEvent, type Tool } from './shell/Game';
+import { LevelSelect } from './shell/LevelSelect';
 import { Modals } from './shell/Modal';
 import * as progress from './shell/progress';
 
@@ -16,6 +17,7 @@ const stats = $('stats');
 const solutionBar = $('solution-bar');
 const help = $('help');
 const buttons = {
+  levels: $<HTMLButtonElement>('btn-levels'),
   prev: $<HTMLButtonElement>('btn-prev'),
   next: $<HTMLButtonElement>('btn-next'),
   undo: $<HTMLButtonElement>('btn-undo'),
@@ -32,6 +34,12 @@ const buttons = {
 
 const renderer = new Renderer(canvas);
 const modals = new Modals(document.body);
+const levelSelect = new LevelSelect(document.body, {
+  levels: () => LEVELS,
+  current: () => levelIndex,
+  solved: (id) => progress.solvedState(id),
+  pick: (i) => pickLevel(i),
+});
 
 let levelIndex = Math.min(Math.max(0, progress.currentLevel()), LEVELS.length - 1);
 let tool: Tool = 'dig';
@@ -66,7 +74,7 @@ function onGameEvent(g: Game, e: GameEvent): void {
     // Let the flowers open first, then say so.
     winTimer = window.setTimeout(() => {
       winTimer = null;
-      if (g === game && !modals.isOpen()) showWin();
+      if (g === game && !modals.isOpen() && !levelSelect.isOpen()) showWin();
     }, 900);
   }
   if (e === 'no' || e === 'budget') navigator.vibrate?.(30);
@@ -93,6 +101,14 @@ function askLevel(index: number): void {
     ok: { label: 'Go', run: () => loadLevel(index) },
     cancel: { label: 'Stay' },
   });
+}
+
+/** From the level list: only ask first when there are ditches to lose. */
+function pickLevel(index: number): void {
+  if (index === levelIndex) return;
+  const p = game.puzzle;
+  if (p.canUndo && !p.won) askLevel(index);
+  else loadLevel(index);
 }
 
 function askGoTo(): void {
@@ -158,6 +174,8 @@ function run(action: KeyAction): void {
       return askLevel(levelIndex - 1);
     case 'goToLevel':
       return askGoTo();
+    case 'levels':
+      return levelSelect.open();
     case 'undo':
       return game.undo();
     case 'redo':
@@ -176,6 +194,7 @@ document.addEventListener('keydown', (e) => {
     modals.handleKey(e);
     return;
   }
+  if (levelSelect.isOpen()) return levelSelect.handleKey(e);
   const action = actionForKey(e);
   if (!action) return;
   e.preventDefault();
@@ -185,7 +204,7 @@ document.addEventListener('keydown', (e) => {
 
 // Pointer events always go to whichever level is loaded now.
 const pointer: PointerHandlers = {
-  enabled: () => !modals.isOpen(),
+  enabled: () => !modals.isOpen() && !levelSelect.isOpen(),
   hover: (c) => game.hover(c),
   strokeStart: (c, mode) => game.strokeStart(c, mode),
   strokeCell: (c) => game.strokeCell(c),
@@ -193,6 +212,7 @@ const pointer: PointerHandlers = {
 };
 new PointerInput(canvas, pointer);
 
+buttons.levels.addEventListener('click', () => levelSelect.open());
 buttons.prev.addEventListener('click', () => askLevel(levelIndex - 1));
 buttons.next.addEventListener('click', () => askLevel(levelIndex + 1));
 buttons.undo.addEventListener('click', () => game.undo());
