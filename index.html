@@ -96,6 +96,7 @@
       #tools { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin: 8px 16px 0; }
       #tools button { gap: 6px; padding: 8px 14px; min-height: 44px; }
       #tools button.on { background: var(--button-hot); }
+      #tools button[hidden] { display: none; }
       #stats { color: var(--dim); font-weight: 800; font-size: 14px; }
       #stats .low { color: var(--warn); }
       .stage { flex: 0 0 auto; display: flex; justify-content: center; padding-top: 6px; }
@@ -205,6 +206,8 @@
     <div id="tools">
       <button id="btn-dig" title="Shovel: drag to dig (D)" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 10l6-6" /><path d="M18 2l4 4" /><path d="M13.5 6.5l4 4-5 5a4 4 0 0 1-5.7 0l-1.3-1.3a4 4 0 0 1 0-5.7z" /></svg>Dig</button>
       <button id="btn-fill" title="Sand: drag to fill a ditch back in (F)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18" /><path d="M5 20c1-5 4-8 7-8s6 3 7 8" /><path d="M12 4v4" /><path d="M9 6l3 3 3-3" /></svg>Fill</button>
+      <button id="btn-pipe" title="Pipe: tap a rock or a hole (T)" aria-pressed="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18M3 15h18" /><path d="M6 7v10M18 7v10" /></svg>Pipe</button>
+      <button id="btn-bomb" title="Bomb: tap a rock (B)" aria-pressed="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="14" r="6.5" /><path d="M15.5 9.5l2-2" /><path d="M19 3v2M21 5h-2M17.5 3.5l1 1" /></svg>Bomb</button>
       <button id="btn-fast" title="Fast water (Space)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l7 6-7 6z" /><path d="M13 6l7 6-7 6z" /></svg>Fast</button>
       <span id="stats"></span>
     </div>

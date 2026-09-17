@@ -1,5 +1,11 @@
 import type { Tile } from './types';
 
+/**
+ * How a square behaves for water right now. A piped rock or hole is a `pipe`,
+ * a blown-up rock is `sand`, a shut gate is `shut`, a thawed spring is `spring`.
+ */
+export type FieldTile = Tile | 'pipe' | 'shut';
+
 /** Heights are in the same units as water depth. */
 export const SAND_HEIGHT = 4;
 export const DUG_HEIGHT = 2;
@@ -15,8 +21,22 @@ export const PLANT_DRINK = 0.02;
 /** A plant only drinks water deeper than this, so a trickle is not enough. */
 export const PLANT_WET = 0.3;
 export const PLANT_NEED = 2;
+/** Water a hot sun square dries up per step. Four wet ones take all a spring gives. */
+export const SUN_DRY = 0.003;
+/** Most a weed drinks per step from the ditches touching it. Two of them take all a spring gives. */
+export const WEED_DRINK = 0.006;
+/** A weed drinks shallower water than a plant can, so it always gets served first. */
+export const WEED_WET = 0.05;
+/** A frozen spring thaws after touching water this deep for THAW_STEPS steps. */
+export const THAW_WET = 0.1;
+export const THAW_STEPS = 90;
 /** Differences below this are treated as level, so still water stays still. */
 const EPSILON = 1e-7;
+
+/** Squares water can't go into or out of. */
+export function blocks(t: FieldTile): boolean {
+  return t === 'rock' || t === 'weed' || t === 'shut' || t === 'frozen';
+}
 
 const NEIGHBOURS: readonly (readonly [number, number])[] = [
   [0, -1],
@@ -35,6 +55,11 @@ export class WaterField {
   /** How much each plant has drunk so far. */
   readonly drunk: Float64Array;
   readonly bloomed: Uint8Array;
+  /** What each weed has drunk, and how long each frozen spring has felt water. */
+  readonly weedDrunk: Float64Array;
+  readonly warmth: Uint16Array;
+  readonly sun: Uint8Array;
+  readonly tiles: FieldTile[];
   /** Totals since the start, so tests can balance the books. */
   sourced = 0;
   drained = 0;
@@ -46,9 +71,13 @@ export class WaterField {
   constructor(
     readonly width: number,
     readonly height: number,
-    readonly tiles: readonly Tile[],
+    tiles: readonly FieldTile[],
   ) {
     const n = width * height;
+    this.tiles = [...tiles];
+    this.weedDrunk = new Float64Array(n);
+    this.warmth = new Uint16Array(n);
+    this.sun = new Uint8Array(n);
     this.ground = new Float64Array(n);
     this.water = new Float64Array(n);
     this.drunk = new Float64Array(n);
@@ -87,8 +116,9 @@ export class WaterField {
       for (let x = 0; x < width; x++) {
         const i = y * width + x;
         const w = water[i];
-        if (w <= EPSILON || tiles[i] === 'rock') continue;
+        if (w <= EPSILON || blocks(tiles[i])) continue;
         const surface = ground[i] + w;
+        const piped = tiles[i] === 'pipe';
         let out = 0;
         for (let d = 0; d < 4; d++) {
           flow[d] = 0;
@@ -96,7 +126,8 @@ export class WaterField {
           const ny = y + NEIGHBOURS[d][1];
           if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
           const j = ny * width + nx;
-          if (tiles[j] === 'rock') continue;
+          // A pipe is closed: a hole beside it can't drink from it.
+          if (blocks(tiles[j]) || (piped && tiles[j] === 'hole')) continue;
           const drop = surface - (ground[j] + water[j]);
           if (drop > EPSILON) {
             flow[d] = FLOW_RATE * drop;
@@ -121,6 +152,21 @@ export class WaterField {
     }
 
     for (let i = 0; i < tiles.length; i++) {
+      if (this.sun[i] && water[i] > 0) {
+        const dry = Math.min(water[i], SUN_DRY);
+        water[i] -= dry;
+        this.drained += dry;
+      }
+    }
+
+    for (let y = 0; y < height; y++)
+      for (let x = 0; x < width; x++) {
+        const i = y * width + x;
+        if (tiles[i] === 'weed') this.weedSips(x, y, i);
+        else if (tiles[i] === 'frozen') this.warm(x, y, i);
+      }
+
+    for (let i = 0; i < tiles.length; i++) {
       if (tiles[i] === 'hole') {
         this.drained += water[i];
         water[i] = 0;
@@ -134,6 +180,33 @@ export class WaterField {
       }
     }
     this.steps++;
+  }
+
+  private weedSips(x: number, y: number, i: number): void {
+    let left = WEED_DRINK;
+    for (const [dx, dy] of NEIGHBOURS) {
+      if (left <= 0) break;
+      if (!this.inside(x + dx, y + dy)) continue;
+      const j = this.index(x + dx, y + dy);
+      if (blocks(this.tiles[j])) continue;
+      const sip = Math.min(this.water[j] - WEED_WET, left);
+      if (sip <= 0) continue;
+      this.water[j] -= sip;
+      left -= sip;
+      this.weedDrunk[i] += sip;
+      this.drained += sip;
+    }
+  }
+
+  private warm(x: number, y: number, i: number): void {
+    const wet = NEIGHBOURS.some(([dx, dy]) => {
+      if (!this.inside(x + dx, y + dy)) return false;
+      const j = this.index(x + dx, y + dy);
+      return !blocks(this.tiles[j]) && this.water[j] > THAW_WET;
+    });
+    if (!wet) return;
+    this.warmth[i]++;
+    if (this.warmth[i] >= THAW_STEPS) this.tiles[i] = 'spring';
   }
 
   /** Water on a square the player just filled soaks into the sand. */

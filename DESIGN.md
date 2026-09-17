@@ -18,11 +18,23 @@ Every plant in bloom wins the level.
 | Plant | Drinks water that reaches it. A ring shows how full it is; at full it blooms and stays bloomed. |
 | Hole | Swallows every drop that reaches it. A ditch touching a hole leaks dry. |
 | Pond | A deep dry hollow. It fills up first, then spills over into the ditch beyond. |
+| Gate | A wooden gate in a ditch. Tap it to open or shut it. Shut, water can't pass. Free to use. |
+| Hot sun | Sand you can dig, but water in a sunny ditch dries up. Four wet sun squares dry up all a spring gives. |
+| Weed | Can't be dug; water can't run onto it. It drinks from any ditch touching it: one weed takes half a spring, two take it all. It swells as it drinks. |
+| Frozen spring | An ice block: water can't pass. Water touching it melts it, and then it's a second spring. |
 
 Water only moves up, down, left and right — never corner to corner.
 
 Some levels have a **dig budget**: at most that many squares dug at once.
 Filling a square you dug gives it back.
+
+Some levels hand out **pipes** and **bombs**, with a count shown like digs left:
+
+- **Pipe** — tap a rock or a hole to lay one; water runs through it like a
+  ditch. A pipe is closed, so a hole beside it can't drink from it. Tap it again
+  to take it back. Dragging lays a row of them.
+- **Bomb** — tap a rock: it and the rocks touching its sides break into sand,
+  which you then dig. Undo is the only way to get a bomb back.
 
 ## How the water works
 
@@ -38,7 +50,12 @@ on scan order and the same digging always gives the same water.
   trickle isn't enough. At 2 drunk it blooms.
 - A hole empties itself every step. Because the spring is slow, a hole anywhere
   in the same ditch network drains the water low enough that plants go dry.
-- Filling a wet ditch soaks its water into the sand.
+- Filling a wet ditch soaks its water into the sand. So does shutting a gate or taking up a pipe.
+- A sun square dries up to 0.003 per step. A weed drinks up to 0.006 per step,
+  but only water deeper than 0.05 — shallower than a plant needs, so weeds get
+  served first.
+- A frozen spring thaws after 90 steps touching water deeper than 0.1. Undo
+  doesn't freeze it again; starting over does.
 
 Water runs 180 steps a second; **Fast** makes it 4× quicker.
 
@@ -48,6 +65,9 @@ Water runs 180 steps a second; **Fast** makes it 4× quicker.
 |---|---|---|---|
 | Dig | drag across sand (Dig tool) | drag (Dig tool) | D picks the shovel |
 | Fill a ditch back in | right-drag, or drag with Fill tool | pick Fill, then drag | F picks sand |
+| Lay a pipe | Pipe tool, tap a rock or hole (tap again to take it up) | same | T picks the pipe |
+| Bomb a rock | Bomb tool, tap a rock | same | B picks the bomb |
+| Open / shut a gate | tap it, any tool | same | — |
 | Swap tools | Dig / Fill buttons | Dig / Fill buttons | X |
 | Fast water | Fast button | Fast button | Space |
 | Undo / redo | ↶ ↷ buttons | same | Ctrl/Cmd Z, Ctrl/Cmd Shift Z |
@@ -64,7 +84,9 @@ the budget says so under the board.
 
 ## Show the solution
 
-Dashed purple squares show where to dig, purple crosses what to fill. **Solve it
+Dashed purple squares show where to dig, purple crosses what to fill, dashed
+rails where to lay a pipe, a dashed star where to bomb, and a dashed ring on a
+gate to tap. **Solve it
 for me** clears your ditches and digs the answer in one undo step; the water
 still has to run. Levels won with help get ☆ instead of ★.
 
@@ -78,6 +100,25 @@ still has to run. Levels won with help get ☆ instead of ★.
 6. **The Pond** — the pond fills and spills; fill the old ditch leaking into a hole. Budget 4.
 7. **Three Gardens** — three plants, budget 13.
 8. **Dry Maze** — fill the leaky ditch by the spring, then the long way round rocks and holes. Budget 22.
+9. **The Gate** — tap a gate open.
+10. **Shut the Leak** — shut the gate into a hole, open the one to the plant.
+11. **Gate Wall** — three gates; open two, shut the one into a hole. Budget 4.
+12. **Pipe Under the Rock** — one pipe through a rock wall.
+13. **Over the Holes** — two pipes across a double row of holes.
+14. **Wall and Holes** — a pipe for the rock and one for the holes; going round is over budget. Budget 15.
+15. **Boom!** — bomb into a ring of rocks.
+16. **Thick Wall** — one bomb opens three rocks in a row.
+17. **One Bomb, Two Plants** — one bomb must open the way both across and down. Budget 10.
+18. **Hot Sun** — the straight way is all sun; go round.
+19. **Cross Where It's Thin** — cross the sunny strip at its two-wide spot. Budget 17.
+20. **Sunburnt Ditch** — fill the old ditch leading into the sun. Budget 12.
+21. **Greedy Weeds** — the straight way touches four weeds; go wide.
+22. **One Weed Is OK** — the only route in budget touches one weed. Budget 16.
+23. **Hot and Weedy** — sun and weeds add up; find the way with only two sun squares. Budget 19.
+24. **Frozen Spring** — water melts the ice in the way.
+25. **Two Springs** — one spring can't cross five sun squares; wake the frozen one. Budget 11.
+26. **Ice and Weeds** — three weeds in the only corridor; you need both springs.
+27. **Toolbox** — a gate, a pipe over holes, a bomb through a thick wall. Budget 15.
 
 ## How it's built
 
@@ -85,6 +126,8 @@ TypeScript + Vite + Vitest, Canvas 2D, like the other games here.
 
 - `src/sim/` — height map, water steps, digging, budget, undo. No drawing, no browser.
 - `src/content/` — the levels, each drawn as text with its answer marked.
+  `levels.ts` has the digging levels, `toolLevels.ts` the ones with gates,
+  pipes, bombs, sun, weeds and ice; `allLevels.ts` puts them in play order.
 - `src/render/` — layout and drawing, scaled to fit the screen at full sharpness.
 - `src/input/` — pointer strokes (mouse, pen, touch) and the key table.
 - `src/shell/` — the running level, question boxes, saved progress.

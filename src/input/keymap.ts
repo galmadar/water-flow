@@ -1,7 +1,9 @@
 /** Every keyboard shortcut in the game. The help card is drawn from this table too. */
 
+import type { ToolName } from '../sim/types';
+
 export type KeyAction =
-  | { type: 'tool'; tool: 'dig' | 'fill' }
+  | { type: 'tool'; tool: ToolName }
   | { type: 'swapTool' }
   | { type: 'fast' }
   | { type: 'restart' }
@@ -38,6 +40,8 @@ interface Binding {
 export const KEYMAP: readonly Binding[] = [
   { keys: ['d'], mod: false, action: { type: 'tool', tool: 'dig' }, label: 'D', help: 'Shovel: drag to dig' },
   { keys: ['f'], mod: false, action: { type: 'tool', tool: 'fill' }, label: 'F', help: 'Sand: drag to fill ditches back in' },
+  { keys: ['t'], mod: false, action: { type: 'tool', tool: 'pipe' }, label: 'T', help: 'Pipe: tap a rock or hole (levels with pipes)' },
+  { keys: ['b'], mod: false, action: { type: 'tool', tool: 'bomb' }, label: 'B', help: 'Bomb: tap a rock (levels with bombs)' },
   { keys: ['x'], mod: false, action: { type: 'swapTool' }, label: 'X', help: 'Swap shovel and sand' },
   { keys: [' '], mod: false, action: { type: 'fast' }, label: 'Space', help: 'Fast water on or off' },
   { keys: ['escape'], mod: false, action: { type: 'escape' }, label: 'Esc', help: 'Close this card, or hide the solution' },

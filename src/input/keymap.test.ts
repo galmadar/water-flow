@@ -14,6 +14,8 @@ describe('keymap', () => {
   it('maps the tool keys', () => {
     expect(actionForKey(key('d'))).toEqual({ type: 'tool', tool: 'dig' });
     expect(actionForKey(key('F', { shiftKey: true }))).toEqual({ type: 'tool', tool: 'fill' });
+    expect(actionForKey(key('t'))).toEqual({ type: 'tool', tool: 'pipe' });
+    expect(actionForKey(key('B', { shiftKey: true }))).toEqual({ type: 'tool', tool: 'bomb' });
     expect(actionForKey(key('x'))).toEqual({ type: 'swapTool' });
     expect(actionForKey(key(' '))).toEqual({ type: 'fast' });
   });
