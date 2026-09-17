@@ -25,7 +25,7 @@ export const HARD: readonly LevelDef[] = [
   level(
     {
       id: 'shut-the-door',
-      name: 'Shut the Door',
+      name: 'Stop the Trickle',
       hint: 'Find all three leaks and fill them in. Join your ditch to the old one.',
     },
     [
@@ -59,8 +59,8 @@ export const HARD: readonly LevelDef[] = [
   level(
     {
       id: 'close-the-tap',
-      name: 'Close the Tap',
-      hint: 'Three old ditches leak. Fill them all. Few digs. The plants must share.',
+      name: 'Not One Drop',
+      hint: 'Fill the three leaky old ditches. The plants must share a ditch.',
       budget: 18,
     },
     [
@@ -156,7 +156,7 @@ export const HARD: readonly LevelDef[] = [
     {
       id: 'double-trouble',
       name: 'Double Trouble',
-      hint: 'Find all three leaks and fill them in. Few digs. The pond is free ditch.',
+      hint: 'Find all three leaks and fill them in. Few digs. The pond is a free ditch.',
       budget: 17,
     },
     [
@@ -248,7 +248,7 @@ export const HARD: readonly LevelDef[] = [
     {
       id: 'leak-week',
       name: 'Leak Week',
-      hint: 'An old ditch leaks into a hole. Fill it in. Every dig counts. Share one ditch.',
+      hint: 'Fill the old ditch that leaks. Then both plants share one ditch.',
       budget: 18,
     },
     [
@@ -349,7 +349,7 @@ export const HARD: readonly LevelDef[] = [
     ],
   ),
   level(
-    { id: 'little-shovel', name: 'Little Shovel', hint: 'Few digs. The pond is free ditch.', budget: 19 },
+    { id: 'little-shovel', name: 'Little Shovel', hint: 'Few digs. The pond is a free ditch.', budget: 19 },
     [
       'P==**.......',
       '....*......#',
@@ -466,7 +466,7 @@ export const HARD: readonly LevelDef[] = [
   level(
     {
       id: 'fix-the-fence',
-      name: 'Fix the Fence',
+      name: 'Mend the Old Ditches',
       hint: 'Two old ditches leak. Fill them both. Not enough digs for a ditch each.',
       budget: 26,
     },
@@ -487,7 +487,7 @@ export const HARD: readonly LevelDef[] = [
     {
       id: 'mole-hills',
       name: 'Mole Hills',
-      hint: 'One old ditch runs to a hole. Block it. Few digs. The plants must share.',
+      hint: 'Block the old ditch to the hole. The plants must share a ditch.',
       budget: 21,
     },
     [
@@ -507,7 +507,7 @@ export const HARD: readonly LevelDef[] = [
     {
       id: 'one-ditch-wonder',
       name: 'One Ditch Wonder',
-      hint: 'Few digs. The pond is free ditch. Holes everywhere. Find a dry path.',
+      hint: 'Let the pond do the work, and keep clear of the holes.',
       budget: 23,
     },
     [
@@ -547,7 +547,7 @@ export const HARD: readonly LevelDef[] = [
     {
       id: 'pocket-change',
       name: 'Pocket Change',
-      hint: 'Every dig counts. Share one ditch. The short way passes a hole. Go around.',
+      hint: 'Share one ditch, and go around the hole.',
       budget: 26,
     },
     [
@@ -567,7 +567,7 @@ export const HARD: readonly LevelDef[] = [
     {
       id: 'thirsty-ground',
       name: 'Thirsty Ground',
-      hint: 'Find both leaks and fill them in. Few digs. The pond is free ditch.',
+      hint: 'Find both leaks and fill them in. Few digs. The pond is a free ditch.',
       budget: 13,
     },
     [

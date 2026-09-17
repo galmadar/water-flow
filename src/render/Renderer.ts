@@ -526,30 +526,45 @@ export class Renderer {
     const { ctx } = this;
     const o = cellOrigin(x, y);
     const cx = o.x + CELL / 2;
-    const cy = o.y + CELL / 2 + 2;
-    const grow = 1 + Math.min(0.45, drunk / 6);
+    const cy = o.y + CELL / 2 + 1;
+    const grow = 1 + Math.min(0.2, drunk / 10);
     const sway = Math.sin(now / 500 + x * 3 + y) * 0.08;
+    // A dark patch of ground so it reads as its own square, not a plant.
+    ctx.fillStyle = PAL.weedGround;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 2, 12, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.save();
     ctx.translate(cx, cy);
     ctx.scale(grow, grow);
     ctx.rotate(sway);
-    for (const [colour, len, count] of [
-      [PAL.weed, 11, 7],
-      [PAL.weedLight, 7, 5],
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = PAL.weedEdge;
+    ctx.lineWidth = 1.2;
+    for (const [colour, len, count, turn] of [
+      [PAL.weed, 13.5, 8, 0],
+      [PAL.weedLight, 9, 6, 0.5],
     ] as const) {
       ctx.fillStyle = colour;
       for (let k = 0; k < count; k++) {
-        const a = (k / count) * Math.PI * 2 + (len === 7 ? 0.4 : 0);
+        const a = (k / count) * Math.PI * 2 + turn;
         ctx.beginPath();
-        ctx.moveTo(Math.cos(a - 0.35) * 2, Math.sin(a - 0.35) * 2);
+        ctx.moveTo(Math.cos(a - 0.45) * 3, Math.sin(a - 0.45) * 3);
         ctx.lineTo(Math.cos(a) * len, Math.sin(a) * len);
-        ctx.lineTo(Math.cos(a + 0.35) * 2, Math.sin(a + 0.35) * 2);
+        ctx.lineTo(Math.cos(a + 0.45) * 3, Math.sin(a + 0.45) * 3);
+        ctx.closePath();
         ctx.fill();
+        ctx.stroke();
       }
     }
+    // Thistle flower on top.
     ctx.fillStyle = PAL.weedFlower;
     ctx.beginPath();
-    ctx.arc(0, -1, 2.4, 0, Math.PI * 2);
+    ctx.arc(0, -1, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = PAL.weedFlowerLight;
+    ctx.beginPath();
+    ctx.arc(-1, -2, 1.6, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }

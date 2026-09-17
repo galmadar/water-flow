@@ -74,6 +74,7 @@ Water runs 180 steps a second; **Fast** makes it 4× quicker.
 | Start again | ↺ button | same | R |
 | Next / previous level | ▶ ◀ buttons (asks first) | same | N ] / P [ |
 | Go to a level | — | — | Ctrl/Cmd G |
+| Level list | list button | same | L |
 | See the solution | bulb (asks first) | same | S |
 | Hide solution / card | bulb, Hide | same | Esc |
 | Controls card | ? button | same | ? or H |

@@ -244,7 +244,7 @@ export const MEDIUM: readonly LevelDef[] = [
     {
       id: 'drain-hunters',
       name: 'Drain Hunters',
-      hint: 'Three old ditches leak. Fill them all. Holes everywhere. Find a dry path.',
+      hint: 'Fill all three leaky ditches, then find a dry path past the holes.',
       budget: 17,
     },
     [
@@ -508,7 +508,7 @@ export const MEDIUM: readonly LevelDef[] = [
     {
       id: 'tidy-the-ditches',
       name: 'Tidy the Ditches',
-      hint: 'Three old ditches leak. Fill them all. Holes everywhere. Find a dry path.',
+      hint: 'Three leaks to fill, and holes all around. Be careful!',
     },
     [
       '.S*******...',
