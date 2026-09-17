@@ -27,6 +27,12 @@ describe('keymap', () => {
     expect(actionForKey(key('z'))).toBeNull();
   });
 
+  it('opens the level list with L, not Ctrl/Cmd L', () => {
+    expect(actionForKey(key('l'))).toEqual({ type: 'levels' });
+    expect(actionForKey(key('L', { shiftKey: true }))).toEqual({ type: 'levels' });
+    expect(actionForKey(key('l', { metaKey: true }))).toBeNull();
+  });
+
   it('leaves browser shortcuts alone', () => {
     expect(actionForKey(key('r', { metaKey: true }))).toBeNull();
     expect(actionForKey(key('d', { altKey: true }))).toBeNull();
