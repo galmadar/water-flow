@@ -92,51 +92,65 @@ still has to run. Levels won with help get ☆ instead of ★.
 
 ## Levels
 
+126 levels, easy to hard. The first six are lessons, one idea each:
+
 1. **First Drink** — straight ditch, spring to plant.
 2. **Around the Rock** — a rock wall in the way.
 3. **Two Thirsty Plants** — one spring, two branches.
 4. **Mind the Hole** — the straight way touches a hole; go one row wider.
 5. **Share the Ditch** — two plants, budget 15: they must share one ditch.
 6. **The Pond** — the pond fills and spills; fill the old ditch leaking into a hole. Budget 4.
-7. **Three Gardens** — three plants, budget 13.
-8. **Dry Maze** — fill the leaky ditch by the spring, then the long way round rocks and holes. Budget 22.
-9. **The Gate** — tap a gate open.
-10. **Shut the Leak** — shut the gate into a hole, open the one to the plant.
-11. **Gate Wall** — three gates; open two, shut the one into a hole. Budget 4.
-12. **Pipe Under the Rock** — one pipe through a rock wall.
-13. **Over the Holes** — two pipes across a double row of holes.
-14. **Wall and Holes** — a pipe for the rock and one for the holes; going round is over budget. Budget 15.
-15. **Boom!** — bomb into a ring of rocks.
-16. **Thick Wall** — one bomb opens three rocks in a row.
-17. **One Bomb, Two Plants** — one bomb must open the way both across and down. Budget 10.
-18. **Hot Sun** — the straight way is all sun; go round.
-19. **Cross Where It's Thin** — cross the sunny strip at its two-wide spot. Budget 17.
-20. **Sunburnt Ditch** — fill the old ditch leading into the sun. Budget 12.
-21. **Greedy Weeds** — the straight way touches four weeds; go wide.
-22. **One Weed Is OK** — the only route in budget touches one weed. Budget 16.
-23. **Hot and Weedy** — sun and weeds add up; find the way with only two sun squares. Budget 19.
-24. **Frozen Spring** — water melts the ice in the way.
-25. **Two Springs** — one spring can't cross five sun squares; wake the frozen one. Budget 11.
-26. **Ice and Weeds** — three weeds in the only corridor; you need both springs.
-27. **Toolbox** — a gate, a pipe over holes, a bomb through a thick wall. Budget 15.
+
+Then 101 digging levels that mix those ideas: rocks and long detours, holes
+beside the short way, ponds, old ditches to reuse, leaky old ditches to fill,
+up to five plants, and tight dig budgets. The hand-made **Dry Maze** sits among
+them. The rest were made by a generator and checked by the level tests: each
+one has a known answer that wins within 15 seconds, and no two look alike, even
+mirrored or shifted.
+
+A new thing turns up about every fifteen levels, three levels each, teaching it
+first and then using it:
+
+- **16–18 Gates** — The Gate (tap it open); Shut the Leak (shut the gate into a
+  hole, open the other); Gate Wall (three gates, budget 4).
+- **31–33 Pipes** — Pipe Under the Rock; Over the Holes (two pipes across a
+  double row of holes); Wall and Holes (going round is over budget, 15).
+- **46–48 Bombs** — Boom! (bomb into a ring of rocks); Thick Wall (one bomb
+  opens three in a row); One Bomb, Two Plants (budget 7).
+- **61–63 Hot sun** — Hot Sun (go round the sun); Cross Where It's Thin (budget
+  14); Sunburnt Ditch (fill the old ditch leading into the sun, budget 12).
+- **76–78 Weeds** — Greedy Weeds (the short way touches two); One Weed Is OK
+  (budget 16); Hot and Weedy (sun and weeds add up, budget 19).
+- **91–93 Frozen springs** — Frozen Spring (water melts the ice in the way);
+  Two Springs (one spring can't push water along a sunny ditch, budget 7); Ice
+  and Weeds (three weeds in the only corridor).
+- **126 Toolbox** — a gate, a pipe over holes and a bomb through a thick wall,
+  budget 15.
+
+The tool levels pass the same checks as the rest, and also prove the tempting
+way fails where there is one.
+
+Progress remembers the level by name, so adding or reordering levels never
+moves a player somewhere else.
 
 ## How it's built
 
 TypeScript + Vite + Vitest, Canvas 2D, like the other games here.
 
-- `src/sim/` — height map, water steps, digging, budget, undo. No drawing, no browser.
+- `src/sim/` — height map, water steps, digging, tools, budget, undo. No drawing, no browser.
 - `src/content/` — the levels, each drawn as text with its answer marked.
-  `levels.ts` has the digging levels, `toolLevels.ts` the ones with gates,
-  pipes, bombs, sun, weeds and ice; `allLevels.ts` puts them in play order.
+  `levels-starter/easy/medium/hard.ts` hold the digging levels,
+  `toolLevels.ts` the gate, pipe, bomb, sun, weed and ice groups, and
+  `levels.ts` puts them all in play order as the one `LEVELS` list.
 - `src/render/` — layout and drawing, scaled to fit the screen at full sharpness.
 - `src/input/` — pointer strokes (mouse, pen, touch) and the key table.
 - `src/shell/` — the running level, question boxes, saved progress.
 
 `npm test` checks `sim/` and `content/` stay pure, tests the water (runs
-downhill, pools, spills, conserves, drains) and plays every level's solution.
+downhill, pools, spills, conserves, drains, dries, thaws) and plays every
+level's solution.
 
 ## Not yet
 
 - Sound.
 - Deeper digging (more than one level down) and hills.
-- Level select screen.

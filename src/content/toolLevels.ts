@@ -14,21 +14,20 @@ function level(meta: Omit<LevelDef, 'map' | 'solution'>, rows: string[], wrong?:
   return { ...meta, ...sketch(rows), ...(wrong ? { wrong: sketch(wrong).solution } : {}) };
 }
 
-export const TOOL_LEVELS: readonly ToolLevel[] = [
-  // Gates
+export const GATE_LEVELS: readonly ToolLevel[] = [
   level(
     { id: 'the-gate', name: 'The Gate', hint: 'Tap the wooden gate to open it.' },
     [
-      '......#.....',
-      '......#.....',
-      '......#.....',
-      '......#.....',
-      '..S===d===P.',
-      '......#.....',
-      '......#.....',
-      '......#.....',
-      '......#.....',
-      '......#.....',
+      '............',
+      '......S.....',
+      '......=.....',
+      '......=.....',
+      '######d#####',
+      '......=.....',
+      '......=.....',
+      '......P.....',
+      '............',
+      '............',
     ],
   ),
   level(
@@ -79,20 +78,22 @@ export const TOOL_LEVELS: readonly ToolLevel[] = [
     ],
   ),
 
-  // Pipes
+];
+
+export const PIPE_LEVELS: readonly ToolLevel[] = [
   level(
     { id: 'pipe-under-rock', name: 'Pipe Under the Rock', hint: 'Pick the Pipe and tap a rock. Water runs through a pipe.', pipes: 1 },
     [
-      '......#.....',
-      '......#.....',
-      '......#.....',
-      '......#.....',
-      '..S***t**P..',
-      '......#.....',
-      '......#.....',
-      '......#.....',
-      '......#.....',
-      '......#.....',
+      '............',
+      '..S.........',
+      '..*.........',
+      '..*.........',
+      '..*.........',
+      '##t####.....',
+      '..*...######',
+      '..*.........',
+      '..*******P..',
+      '............',
     ],
   ),
   level(
@@ -132,7 +133,9 @@ export const TOOL_LEVELS: readonly ToolLevel[] = [
     ],
   ),
 
-  // Bombs
+];
+
+export const BOMB_LEVELS: readonly ToolLevel[] = [
   level(
     { id: 'boom', name: 'Boom!', hint: 'Pick the Bomb and tap a rock. It breaks, and so do the rocks next to it.', bombs: 1 },
     [
@@ -169,46 +172,48 @@ export const TOOL_LEVELS: readonly ToolLevel[] = [
       name: 'One Bomb, Two Plants',
       hint: 'One bomb has to open the way to both plants. Pick the spot well.',
       bombs: 1,
-      budget: 10,
+      budget: 7,
     },
     [
       '............',
+      '.....S......',
+      '.....*......',
+      '.####r#####.',
+      '.####brP###.',
+      '.####r#####.',
+      '.....*......',
+      '.....*......',
+      '.....P......',
       '............',
-      '.....###....',
-      '.....###....',
-      '.....###....',
-      '.....###....',
-      '.S***rbr**P.',
-      '.....#r#....',
-      '......*.....',
-      '......P.....',
     ],
   ),
 
-  // Hot sun
+];
+
+export const SUN_LEVELS: readonly ToolLevel[] = [
   level(
-    { id: 'hot-sun', name: 'Hot Sun', hint: 'The sun dries water up. A long ditch in the sun never gets there. Go round.' },
+    { id: 'hot-sun', name: 'Hot Sun', hint: 'The sun dries water up. A ditch across all that sun never gets there. Go round.' },
     [
       '............',
       '............',
-      '...~~~~~~...',
-      '...~~~~~~...',
-      '.S.~~~~~~.P.',
-      '.*.~~~~~~.*.',
-      '.*.~~~~~~.*.',
-      '.*.~~~~~~.*.',
+      '............',
+      '....~~~~~...',
+      '.S..~~~~~.P.',
+      '.*..~~~~~.*.',
       '.**********.',
+      '............',
+      '............',
       '............',
     ],
     [
       '............',
       '............',
-      '...~~~~~~...',
-      '...~~~~~~...',
-      '.S*++++++*P.',
-      '...~~~~~~...',
-      '...~~~~~~...',
-      '...~~~~~~...',
+      '............',
+      '....~~~~~...',
+      '.S**+++++*P.',
+      '....~~~~~...',
+      '............',
+      '............',
       '............',
       '............',
     ],
@@ -218,31 +223,31 @@ export const TOOL_LEVELS: readonly ToolLevel[] = [
       id: 'thin-shade',
       name: 'Cross Where It’s Thin',
       hint: 'A little sun is fine. Cross the sunny strip where it’s thinnest.',
-      budget: 17,
+      budget: 14,
     },
     [
-      '....~~~~~...',
-      '....~~~~~...',
-      '....~~~~~...',
-      '.S..~~~~~..P',
-      '.*..~~~~~..*',
-      '.*..~~~~~..*',
-      '.*..~~~~~..*',
-      '.*****++****',
-      '....~~~~~...',
-      '....~~~~~...',
+      '.S..........',
+      '.*..........',
+      '.*******....',
+      '~~~~~~~+~~~~',
+      '~~~~~~~+~~~~',
+      '~~~~~~~*~~~~',
+      '~~~~~~~*~~~~',
+      '~~~~~~~*~~~~',
+      '.......*....',
+      '.......P....',
     ],
     [
-      '....~~~~~...',
-      '....~~~~~...',
-      '....~~~~~...',
-      '.S**+++++**P',
-      '....~~~~~...',
-      '....~~~~~...',
-      '....~~~~~...',
-      '......~~....',
-      '....~~~~~...',
-      '....~~~~~...',
+      '.S..........',
+      '.*..........',
+      '.*..........',
+      '~+~~~~~.~~~~',
+      '~+~~~~~.~~~~',
+      '~+~~~~~.~~~~',
+      '~+~~~~~.~~~~',
+      '~+~~~~~.~~~~',
+      '.*..........',
+      '.******P....',
     ],
   ),
   level(
@@ -266,32 +271,34 @@ export const TOOL_LEVELS: readonly ToolLevel[] = [
     ],
   ),
 
-  // Weeds
+];
+
+export const WEED_LEVELS: readonly ToolLevel[] = [
   level(
     { id: 'greedy-weeds', name: 'Greedy Weeds', hint: 'Weeds drink from any ditch that touches them. Keep away from them.' },
     [
-      '............',
-      '............',
-      '............',
-      '....w..w....',
-      '.S........P.',
-      '.*..w..w..*.',
-      '.*........*.',
-      '.**********.',
-      '............',
-      '............',
+      '..S.........',
+      '..*..w....w.',
+      '..*.........',
+      '..*******...',
+      '.w......*.w.',
+      '........*...',
+      '...w....*...',
+      '........*..w',
+      '.....w..*...',
+      '........P...',
     ],
     [
-      '............',
-      '............',
-      '............',
-      '....w..w....',
-      '.S********P.',
-      '....w..w....',
-      '............',
-      '............',
-      '............',
-      '............',
+      '..S.........',
+      '..*..w....w.',
+      '..*.........',
+      '..*.........',
+      '.w*.......w.',
+      '..*.........',
+      '..*w........',
+      '..*........w',
+      '..*..w......',
+      '..******P...',
     ],
   ),
   level(
@@ -359,18 +366,20 @@ export const TOOL_LEVELS: readonly ToolLevel[] = [
     ],
   ),
 
-  // Frozen springs
+];
+
+export const ICE_LEVELS: readonly ToolLevel[] = [
   level(
     { id: 'frozen-spring', name: 'Frozen Spring', hint: 'Ice melts when water touches it. Then it’s a spring too.' },
     [
       '............',
-      '............',
-      '......###...',
-      '......#P#...',
-      '......#=#...',
-      '......#I#...',
-      '.......*....',
-      '.S******....',
+      '........###.',
+      '........#P#.',
+      '........#=#.',
+      '........#=#.',
+      '........#=#.',
+      '.........I..',
+      '.S********..',
       '............',
       '............',
     ],
@@ -379,32 +388,32 @@ export const TOOL_LEVELS: readonly ToolLevel[] = [
     {
       id: 'two-springs',
       name: 'Two Springs',
-      hint: 'One spring is not enough to cross all that sun. Wake the frozen one.',
-      budget: 11,
+      hint: 'One spring can’t push water all along that sunny ditch. Wake the frozen one.',
+      budget: 7,
     },
     [
-      '....~~~~~...',
-      '....~~~~~...',
-      '....~~~~~...',
-      '....~~~~~...',
-      '.S**+++++*P.',
-      '.*..~~~~~...',
-      '.*..~~~~~...',
-      '.*..~~~~~...',
-      '.I..~~~~~...',
-      '....~~~~~...',
+      '............',
+      '............',
+      '..S.........',
+      '..*.........',
+      '..*...######',
+      '..****-----P',
+      '..*...######',
+      '..I.........',
+      '............',
+      '............',
     ],
     [
-      '....~~~~~...',
-      '....~~~~~...',
-      '....~~~~~...',
-      '....~~~~~...',
-      '.S**+++++*P.',
-      '....~~~~~...',
-      '....~~~~~...',
-      '....~~~~~...',
-      '.I..~~~~~...',
-      '....~~~~~...',
+      '............',
+      '............',
+      '..S.........',
+      '..*.........',
+      '..*...######',
+      '..****-----P',
+      '......######',
+      '..I.........',
+      '............',
+      '............',
     ],
   ),
   level(
@@ -435,7 +444,9 @@ export const TOOL_LEVELS: readonly ToolLevel[] = [
     ],
   ),
 
-  // Everything
+];
+
+export const TOOLBOX_LEVELS: readonly ToolLevel[] = [
   level(
     {
       id: 'toolbox',
@@ -458,4 +469,15 @@ export const TOOL_LEVELS: readonly ToolLevel[] = [
       '.**rbr*P....',
     ],
   ),
+];
+
+/** Each group in its own teaching order. `levels.ts` spreads them through the list. */
+export const TOOL_LEVELS: readonly ToolLevel[] = [
+  ...GATE_LEVELS,
+  ...PIPE_LEVELS,
+  ...BOMB_LEVELS,
+  ...SUN_LEVELS,
+  ...WEED_LEVELS,
+  ...ICE_LEVELS,
+  ...TOOLBOX_LEVELS,
 ];

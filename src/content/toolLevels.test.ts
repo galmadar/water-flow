@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { parseLevel } from '../sim/level';
 import { Puzzle } from '../sim/Puzzle';
-import { ALL_LEVELS } from './allLevels';
-import { LEVELS } from './levels';
-import { TOOL_LEVELS } from './toolLevels';
+import { DIG_LEVELS, LEVELS } from './levels';
+import { BOMB_LEVELS, GATE_LEVELS, ICE_LEVELS, PIPE_LEVELS, SUN_LEVELS, TOOL_LEVELS, TOOLBOX_LEVELS, WEED_LEVELS } from './toolLevels';
 
 /** About 25 seconds of play at the game's speed, same as the first levels. */
 const MAX_STEPS = 6000;
@@ -17,10 +16,13 @@ function stepsToWin(p: Puzzle): number | null {
 }
 
 describe('tool level registry', () => {
-  it('comes after the first levels, with ids and names unique across all of them', () => {
-    expect(ALL_LEVELS).toEqual([...LEVELS, ...TOOL_LEVELS]);
-    expect(new Set(ALL_LEVELS.map((l) => l.id)).size).toBe(ALL_LEVELS.length);
-    expect(new Set(ALL_LEVELS.map((l) => l.name)).size).toBe(ALL_LEVELS.length);
+  it('spreads the tool groups through the list, each in its own order, Toolbox last', () => {
+    expect(LEVELS.filter((l) => DIG_LEVELS.includes(l))).toEqual(DIG_LEVELS);
+    expect(LEVELS.filter((l) => TOOL_LEVELS.includes(l))).toEqual(TOOL_LEVELS);
+    const at = (g: readonly unknown[]) => LEVELS.indexOf(g[0] as (typeof LEVELS)[number]) + 1;
+    const starts = [GATE_LEVELS, PIPE_LEVELS, BOMB_LEVELS, SUN_LEVELS, WEED_LEVELS, ICE_LEVELS].map(at);
+    starts.forEach((s, k) => expect(Math.abs(s - 15 * (k + 1)), `group ${k} at ${s}`).toBeLessThanOrEqual(2));
+    expect(LEVELS[LEVELS.length - 1]).toBe(TOOLBOX_LEVELS[TOOLBOX_LEVELS.length - 1]);
   });
 
   it('every level is 12×10 with one spring, a plant and a hint', () => {

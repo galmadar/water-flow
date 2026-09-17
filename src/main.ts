@@ -1,4 +1,4 @@
-import { ALL_LEVELS as LEVELS } from './content/allLevels';
+import { LEVELS } from './content/levels';
 import { actionForKey, KEYMAP, type KeyAction } from './input/keymap';
 import { PointerInput, type PointerHandlers } from './input/PointerInput';
 import { CANVAS_H, CANVAS_W } from './render/layout';
@@ -35,7 +35,7 @@ const buttons = {
 const renderer = new Renderer(canvas);
 const modals = new Modals(document.body);
 
-let levelIndex = Math.min(Math.max(0, progress.currentLevel()), LEVELS.length - 1);
+let levelIndex = progress.currentLevel(LEVELS.map((l) => l.id));
 let tool: Tool = 'dig';
 let fast = false;
 let game = makeGame(levelIndex);
@@ -59,7 +59,7 @@ function loadLevel(index: number): void {
   game = makeGame(index);
   budgetNote = false;
   outNote = false;
-  progress.setCurrentLevel(index);
+  progress.setCurrentLevel(LEVELS[index].id, index);
   updateHud();
 }
 
