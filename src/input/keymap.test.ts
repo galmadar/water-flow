@@ -14,6 +14,8 @@ describe('keymap', () => {
   it('maps the tool keys', () => {
     expect(actionForKey(key('d'))).toEqual({ type: 'tool', tool: 'dig' });
     expect(actionForKey(key('F', { shiftKey: true }))).toEqual({ type: 'tool', tool: 'fill' });
+    expect(actionForKey(key('t'))).toEqual({ type: 'tool', tool: 'pipe' });
+    expect(actionForKey(key('B', { shiftKey: true }))).toEqual({ type: 'tool', tool: 'bomb' });
     expect(actionForKey(key('x'))).toEqual({ type: 'swapTool' });
     expect(actionForKey(key(' '))).toEqual({ type: 'fast' });
   });
@@ -23,6 +25,12 @@ describe('keymap', () => {
     expect(actionForKey(key('z', { metaKey: true }))).toEqual({ type: 'undo' });
     expect(actionForKey(key('Z', { metaKey: true, shiftKey: true }))).toEqual({ type: 'redo' });
     expect(actionForKey(key('z'))).toBeNull();
+  });
+
+  it('opens the level list with L, not Ctrl/Cmd L', () => {
+    expect(actionForKey(key('l'))).toEqual({ type: 'levels' });
+    expect(actionForKey(key('L', { shiftKey: true }))).toEqual({ type: 'levels' });
+    expect(actionForKey(key('l', { metaKey: true }))).toBeNull();
   });
 
   it('leaves browser shortcuts alone', () => {

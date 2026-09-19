@@ -20,5 +20,6 @@ levels limit how much you can dig. 12×10 board, drawn with Canvas 2D.
 
 `src/sim/` and `src/content/` must never import the DOM, canvas or renderer
 code. `npm test` fails if they do. Every level needs a known solution in its
-`solution` field in `src/content/levels.ts` (drawn on the map with `*` and `x`);
+`solution` field (drawn on the map with `*`, `x` and the other marks listed on
+`sketch` in `src/sim/level.ts`); new levels with tools go in `src/content/toolLevels.ts`;
 the tests play it and check the plants bloom.

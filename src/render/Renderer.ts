@@ -1,11 +1,11 @@
 import type { Puzzle } from '../sim/Puzzle';
-import type { Action, Pos } from '../sim/types';
+import type { Action, Pos, ToolName } from '../sim/types';
 import { CANVAS_H, CANVAS_W, CELL, COLS, MARGIN, ROWS, cellOrigin } from './layout';
 import { BOARD as PAL, applyCssPalette } from './palette';
 
 export interface ViewState {
   puzzle: Puzzle;
-  tool: 'dig' | 'fill';
+  tool: ToolName;
   hoverCell: Pos | null;
   shake: { cell: Pos; start: number } | null;
   wonAt: number | null;
@@ -66,7 +66,12 @@ export class Renderer {
     ctx.save();
     rounded(ctx, MARGIN, MARGIN, bw, bh, 9);
     ctx.clip();
-    for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) this.sand(x, y);
+    for (let y = 0; y < ROWS; y++)
+      for (let x = 0; x < COLS; x++) {
+        this.sand(x, y);
+        if (p.isSun(x, y)) this.sunGround(x, y);
+        if (p.tileAt(x, y) === 'rock' && p.isBlasted(x, y)) this.rubble(x, y);
+      }
 
     const low: LowTest = (x, y) => inBoard(x, y) && isLow(p, x, y);
     for (let y = 0; y < ROWS; y++)
@@ -86,15 +91,30 @@ export class Renderer {
 
     for (let y = 0; y < ROWS; y++)
       for (let x = 0; x < COLS; x++) {
+        if (p.isSun(x, y)) this.sunGlare(x, y, p.isDug(x, y), now);
         switch (p.tileAt(x, y)) {
           case 'rock':
-            this.rock(x, y);
+            if (p.hasPipe(x, y)) this.pipe(x, y, low, p.waterAt(x, y) > MIN_DRAWN_DEPTH, true);
+            else if (!p.isBlasted(x, y)) this.rock(x, y);
+            break;
+          case 'gate':
+            this.gate(x, y, p.isGateOpen(x, y), low);
+            break;
+          case 'weed':
+            this.weed(x, y, p.weedDrunk(x, y), now);
+            break;
+          case 'frozen':
+            if (p.isThawed(x, y)) this.spring(x, y, now);
+            else this.ice(x, y, p.thawProgress(x, y));
             break;
           case 'spring':
             this.spring(x, y, now);
             break;
           case 'hole':
-            this.hole(x, y, now);
+            if (p.hasPipe(x, y)) {
+              this.hole(x, y, now);
+              this.pipe(x, y, low, p.waterAt(x, y) > MIN_DRAWN_DEPTH, false);
+            } else this.hole(x, y, now);
             break;
           case 'plant':
             this.plant(x, y, p.plantProgress(x, y), p.isBloomed(x, y), now);
@@ -107,7 +127,7 @@ export class Renderer {
     if (v.solution) for (const a of v.solution) this.ghost(a, now);
     ctx.restore();
 
-    if (v.hoverCell && p.tileAt(v.hoverCell.x, v.hoverCell.y) === 'sand') this.hover(v.hoverCell, v.tool);
+    if (v.hoverCell && canTouch(p, v.hoverCell, v.tool)) this.hover(v.hoverCell, v.tool);
     if (v.shake && now - v.shake.start < SHAKE_MS) this.flash(v.shake.cell, (now - v.shake.start) / SHAKE_MS);
   }
 
@@ -302,10 +322,48 @@ export class Renderer {
   private ghost(a: Action, now: number): void {
     const { ctx } = this;
     const o = cellOrigin(a.at.x, a.at.y);
+    const cx = o.x + CELL / 2;
+    const cy = o.y + CELL / 2;
     ctx.strokeStyle = PAL.solution;
     ctx.lineWidth = 2;
     ctx.globalAlpha = 0.65 + 0.3 * Math.sin(now / 300);
-    if (a.type === 'dig') {
+    if (a.type === 'pipe') {
+      // Two dashed rails: lay a pipe here.
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(o.x + 4, cy - 6);
+      ctx.lineTo(o.x + CELL - 4, cy - 6);
+      ctx.moveTo(o.x + 4, cy + 6);
+      ctx.lineTo(o.x + CELL - 4, cy + 6);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else if (a.type === 'bomb') {
+      // A dashed star: bomb here.
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      for (let k = 0; k < 8; k++) {
+        const ang = (k / 8) * Math.PI * 2;
+        const r = k % 2 === 0 ? 13 : 6;
+        const px = cx + Math.cos(ang) * r;
+        const py = cy + Math.sin(ang) * r;
+        if (k === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else if (a.type === 'gate') {
+      // A dashed ring with a dot: tap this gate.
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = PAL.solution;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (a.type === 'dig') {
       ctx.setLineDash([4, 3]);
       rounded(ctx, o.x + 5, o.y + 5, CELL - 10, CELL - 10, 6);
       ctx.stroke();
@@ -322,13 +380,230 @@ export class Renderer {
     ctx.globalAlpha = 1;
   }
 
-  private hover(c: Pos, tool: 'dig' | 'fill'): void {
+  private hover(c: Pos, tool: ToolName): void {
     const { ctx } = this;
     const o = cellOrigin(c.x, c.y);
-    ctx.strokeStyle = tool === 'dig' ? PAL.hoverDig : PAL.hoverFill;
+    ctx.strokeStyle = tool === 'fill' ? PAL.hoverFill : tool === 'bomb' ? PAL.bomb : PAL.hoverDig;
     ctx.lineWidth = 2;
     rounded(ctx, o.x + 1.5, o.y + 1.5, CELL - 3, CELL - 3, 7);
     ctx.stroke();
+  }
+
+  private sunGround(x: number, y: number): void {
+    const { ctx } = this;
+    const o = cellOrigin(x, y);
+    ctx.fillStyle = PAL.sunTint;
+    ctx.fillRect(o.x, o.y, CELL, CELL);
+  }
+
+  /** Drawn over the ditch and water too, so a dug sun square still reads as hot. */
+  private sunGlare(x: number, y: number, dug: boolean, now: number): void {
+    const { ctx } = this;
+    const o = cellOrigin(x, y);
+    if (dug) {
+      ctx.fillStyle = PAL.sunTint;
+      ctx.fillRect(o.x, o.y, CELL, CELL);
+    }
+    // A small sun in the corner, its rays turning slowly.
+    const cx = o.x + CELL - 8;
+    const cy = o.y + 8;
+    const a0 = now / 2500 + hash(x, y, 5);
+    ctx.strokeStyle = PAL.sunRay;
+    ctx.lineWidth = 1.2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let k = 0; k < 6; k++) {
+      const a = a0 + (k / 6) * Math.PI * 2;
+      ctx.moveTo(cx + Math.cos(a) * 3.6, cy + Math.sin(a) * 3.6);
+      ctx.lineTo(cx + Math.cos(a) * 5.6, cy + Math.sin(a) * 5.6);
+    }
+    ctx.stroke();
+    ctx.fillStyle = PAL.sunCore;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 2.6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  private rubble(x: number, y: number): void {
+    const { ctx } = this;
+    const o = cellOrigin(x, y);
+    ctx.fillStyle = PAL.rubble;
+    for (let k = 0; k < 6; k++) {
+      const h = hash(x, y, 20 + k);
+      ctx.beginPath();
+      ctx.arc(o.x + 5 + (h % 22), o.y + 5 + ((h >> 6) % 22), 1.2 + ((h >> 11) % 3) * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  /** A grey pipe running toward each joined neighbour; a blue line shows water inside. */
+  private pipe(x: number, y: number, low: LowTest, wet: boolean, onRock: boolean): void {
+    const { ctx } = this;
+    const o = cellOrigin(x, y);
+    const cx = o.x + CELL / 2;
+    const cy = o.y + CELL / 2;
+    if (onRock) {
+      ctx.fillStyle = PAL.rockDark;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 1, 14, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const arms: [number, number][] = [];
+    for (const [dx, dy] of [
+      [0, -1],
+      [1, 0],
+      [0, 1],
+      [-1, 0],
+    ] as const)
+      if (low(x + dx, y + dy)) arms.push([dx, dy]);
+    if (arms.length === 0) arms.push([1, 0], [-1, 0]);
+    ctx.lineCap = 'butt';
+    for (const [width, colour] of [
+      [12, PAL.pipeDark],
+      [9, PAL.pipe],
+      [3, wet ? PAL.waterMid : PAL.pipeLight],
+    ] as const) {
+      ctx.strokeStyle = colour;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      for (const [dx, dy] of arms) {
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + (dx * CELL) / 2, cy + (dy * CELL) / 2);
+      }
+      ctx.stroke();
+    }
+    ctx.fillStyle = PAL.pipeDark;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 6.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = wet ? PAL.waterMid : PAL.pipe;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /** Two posts; shut, a plank bars the ditch, open, the plank swings to the side. */
+  private gate(x: number, y: number, open: boolean, low: LowTest): void {
+    const { ctx } = this;
+    const o = cellOrigin(x, y);
+    const cx = o.x + CELL / 2;
+    const cy = o.y + CELL / 2;
+    const alongX = low(x - 1, y) || low(x + 1, y) || !(low(x, y - 1) || low(x, y + 1));
+    ctx.save();
+    ctx.translate(cx, cy);
+    if (!alongX) ctx.rotate(Math.PI / 2);
+    // Water runs along x here; posts sit above and below the channel.
+    ctx.fillStyle = PAL.woodDark;
+    ctx.fillRect(-3, -14, 6, 5);
+    ctx.fillRect(-3, 9, 6, 5);
+    if (open) {
+      ctx.fillStyle = PAL.wood;
+      ctx.save();
+      ctx.translate(0, -11);
+      ctx.rotate(-1.2);
+      ctx.fillRect(0, -2.5, 16, 5);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = PAL.wood;
+      ctx.fillRect(-4, -11, 8, 22);
+      ctx.strokeStyle = PAL.woodLight;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-1.5, -9);
+      ctx.lineTo(-1.5, 9);
+      ctx.stroke();
+      ctx.strokeStyle = PAL.woodDark;
+      ctx.beginPath();
+      ctx.moveTo(-4, -4);
+      ctx.lineTo(4, 4);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /** A spiky weed that swells as it drinks. */
+  private weed(x: number, y: number, drunk: number, now: number): void {
+    const { ctx } = this;
+    const o = cellOrigin(x, y);
+    const cx = o.x + CELL / 2;
+    const cy = o.y + CELL / 2 + 1;
+    const grow = 1 + Math.min(0.2, drunk / 10);
+    const sway = Math.sin(now / 500 + x * 3 + y) * 0.08;
+    // A dark patch of ground so it reads as its own square, not a plant.
+    ctx.fillStyle = PAL.weedGround;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 2, 12, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(grow, grow);
+    ctx.rotate(sway);
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = PAL.weedEdge;
+    ctx.lineWidth = 1.2;
+    for (const [colour, len, count, turn] of [
+      [PAL.weed, 13.5, 8, 0],
+      [PAL.weedLight, 9, 6, 0.5],
+    ] as const) {
+      ctx.fillStyle = colour;
+      for (let k = 0; k < count; k++) {
+        const a = (k / count) * Math.PI * 2 + turn;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a - 0.45) * 3, Math.sin(a - 0.45) * 3);
+        ctx.lineTo(Math.cos(a) * len, Math.sin(a) * len);
+        ctx.lineTo(Math.cos(a + 0.45) * 3, Math.sin(a + 0.45) * 3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+    // Thistle flower on top.
+    ctx.fillStyle = PAL.weedFlower;
+    ctx.beginPath();
+    ctx.arc(0, -1, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = PAL.weedFlowerLight;
+    ctx.beginPath();
+    ctx.arc(-1, -2, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /** A frozen spring: an ice block that cracks as it warms. */
+  private ice(x: number, y: number, thaw: number): void {
+    const { ctx } = this;
+    const o = cellOrigin(x, y);
+    ctx.fillStyle = PAL.iceEdge;
+    rounded(ctx, o.x + 3, o.y + 3, CELL - 6, CELL - 6, 7);
+    ctx.fill();
+    ctx.fillStyle = PAL.ice;
+    rounded(ctx, o.x + 5, o.y + 5, CELL - 10, CELL - 10, 5);
+    ctx.fill();
+    ctx.strokeStyle = PAL.iceShine;
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(o.x + 9, o.y + 14);
+    ctx.lineTo(o.x + 14, o.y + 9);
+    ctx.stroke();
+    // The spring sleeping inside.
+    ctx.strokeStyle = PAL.springStone;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(o.x + CELL / 2, o.y + CELL / 2, 6, 0, Math.PI * 2);
+    ctx.stroke();
+    if (thaw > 0) {
+      ctx.strokeStyle = PAL.iceEdge;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      const cracks = Math.ceil(thaw * 4);
+      for (let k = 0; k < cracks; k++) {
+        const a = k * 1.7 + 0.5;
+        ctx.moveTo(o.x + CELL / 2, o.y + CELL / 2);
+        ctx.lineTo(o.x + CELL / 2 + Math.cos(a) * 11, o.y + CELL / 2 + Math.sin(a) * 11);
+      }
+      ctx.stroke();
+    }
   }
 
   private flash(c: Pos, t: number): void {
@@ -350,8 +625,27 @@ function inBoard(x: number, y: number): boolean {
 
 /** Squares sunk below the sand, where water can sit. */
 function isLow(p: Puzzle, x: number, y: number): boolean {
-  const t = p.tileAt(x, y);
-  return t === 'sand' ? p.isDug(x, y) : t !== 'rock';
+  switch (p.tileAt(x, y)) {
+    case 'sand':
+      return p.isDug(x, y);
+    case 'rock':
+      return p.hasPipe(x, y) || (p.isBlasted(x, y) && p.isDug(x, y));
+    case 'weed':
+      return false;
+    case 'frozen':
+      return p.isThawed(x, y);
+    default:
+      return true;
+  }
+}
+
+/** Whether the picked tool (or a tap, for gates) does something on this square. */
+function canTouch(p: Puzzle, c: Pos, tool: ToolName): boolean {
+  const t = p.tileAt(c.x, c.y);
+  if (t === 'gate') return true;
+  if (tool === 'pipe') return p.hasPipe(c.x, c.y) || t === 'hole' || (t === 'rock' && !p.isBlasted(c.x, c.y));
+  if (tool === 'bomb') return t === 'rock' && !p.hasPipe(c.x, c.y) && !p.isBlasted(c.x, c.y);
+  return p.isDiggable(c.x, c.y);
 }
 
 /** One cell's share of a joined-up shape: it reaches the cell edge toward each joined neighbour. */

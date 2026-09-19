@@ -1,9 +1,11 @@
 import type { PointerHandlers, StrokeMode } from '../input/PointerInput';
 import { Puzzle } from '../sim/Puzzle';
-import type { Action, LevelDef, Pos } from '../sim/types';
+import type { Action, LevelDef, Pos, ToolName } from '../sim/types';
 
-export type GameEvent = 'changed' | 'won' | 'no' | 'budget';
-export type Tool = 'dig' | 'fill';
+/** `out` means no pipes or bombs left. */
+export type GameEvent = 'changed' | 'won' | 'no' | 'budget' | 'out';
+export type Tool = ToolName;
+type StrokeTool = Tool | 'unpipe';
 
 export interface Shake {
   cell: Pos;
@@ -27,7 +29,7 @@ export class Game implements PointerHandlers {
   /** The solution overlay is up. It stays while the player keeps playing. */
   showSolution = false;
   private helped = false;
-  private strokeMode: Tool | null = null;
+  private strokeMode: StrokeTool | null = null;
   private strokeRefused = false;
   private lastTick: number | null = null;
   private owed = 0;
@@ -99,7 +101,18 @@ export class Game implements PointerHandlers {
     this.strokeMode = mode === 'fill' ? 'fill' : this.tool;
     this.strokeRefused = false;
     this.puzzle.beginStroke();
+    const p = this.puzzle;
+    // Gates open with a tap, whatever the tool; a bomb goes off once per tap.
+    if (p.tileAt(cell.x, cell.y) === 'gate') {
+      this.strokeMode = null;
+      this.hoverCell = cell;
+      p.toggleGate(cell.x, cell.y);
+      this.emit('changed');
+      return;
+    }
+    if (this.strokeMode === 'pipe' && p.hasPipe(cell.x, cell.y)) this.strokeMode = 'unpipe';
     this.strokeCell(cell);
+    if (this.strokeMode === 'bomb') this.strokeMode = null;
   }
 
   strokeCell(cell: Pos): void {
@@ -112,7 +125,15 @@ export class Game implements PointerHandlers {
       else if (!refusal) this.emit('changed');
     } else if (this.strokeMode === 'fill') {
       if (p.fill(cell.x, cell.y)) this.emit('changed');
-      else if (p.tileAt(cell.x, cell.y) !== 'sand') this.no(cell, 'no');
+      else if (!p.isDiggable(cell.x, cell.y) && p.tileAt(cell.x, cell.y) !== 'gate') this.no(cell, 'no');
+    } else if (this.strokeMode === 'pipe' || this.strokeMode === 'bomb') {
+      const refusal = this.strokeMode === 'pipe' ? p.pipe(cell.x, cell.y) : p.bomb(cell.x, cell.y);
+      if (refusal === 'none-left') this.no(cell, 'out');
+      // Dragging a pipe across sand is fine; only a wrong tap buzzes.
+      else if (refusal === 'wrong-square' && (this.strokeMode === 'bomb' || !p.isDiggable(cell.x, cell.y))) this.no(cell, 'no');
+      else if (!refusal) this.emit('changed');
+    } else if (this.strokeMode === 'unpipe') {
+      if (p.unpipe(cell.x, cell.y)) this.emit('changed');
     }
   }
 
@@ -137,7 +158,7 @@ export class Game implements PointerHandlers {
     this.emit('changed');
   }
 
-  private no(cell: Pos, event: 'no' | 'budget'): void {
+  private no(cell: Pos, event: 'no' | 'budget' | 'out'): void {
     this.shake = { cell, start: performance.now() };
     // One buzz per stroke, not one per square dragged over.
     if (this.strokeRefused) return;

@@ -1,13 +1,16 @@
 /** Every keyboard shortcut in the game. The help card is drawn from this table too. */
 
+import type { ToolName } from '../sim/types';
+
 export type KeyAction =
-  | { type: 'tool'; tool: 'dig' | 'fill' }
+  | { type: 'tool'; tool: ToolName }
   | { type: 'swapTool' }
   | { type: 'fast' }
   | { type: 'restart' }
   | { type: 'nextLevel' }
   | { type: 'prevLevel' }
   | { type: 'goToLevel' }
+  | { type: 'levels' }
   | { type: 'undo' }
   | { type: 'redo' }
   | { type: 'escape' }
@@ -38,12 +41,15 @@ interface Binding {
 export const KEYMAP: readonly Binding[] = [
   { keys: ['d'], mod: false, action: { type: 'tool', tool: 'dig' }, label: 'D', help: 'Shovel: drag to dig' },
   { keys: ['f'], mod: false, action: { type: 'tool', tool: 'fill' }, label: 'F', help: 'Sand: drag to fill ditches back in' },
+  { keys: ['t'], mod: false, action: { type: 'tool', tool: 'pipe' }, label: 'T', help: 'Pipe: tap a rock or hole (levels with pipes)' },
+  { keys: ['b'], mod: false, action: { type: 'tool', tool: 'bomb' }, label: 'B', help: 'Bomb: tap a rock (levels with bombs)' },
   { keys: ['x'], mod: false, action: { type: 'swapTool' }, label: 'X', help: 'Swap shovel and sand' },
   { keys: [' '], mod: false, action: { type: 'fast' }, label: 'Space', help: 'Fast water on or off' },
   { keys: ['escape'], mod: false, action: { type: 'escape' }, label: 'Esc', help: 'Close this card, or hide the solution' },
   { keys: ['r'], mod: false, action: { type: 'restart' }, label: 'R', help: 'Start the level again' },
   { keys: ['n', ']'], mod: false, action: { type: 'nextLevel' }, label: 'N  ]', help: 'Next level' },
   { keys: ['p', '['], mod: false, action: { type: 'prevLevel' }, label: 'P  [', help: 'Previous level' },
+  { keys: ['l'], mod: false, action: { type: 'levels' }, label: 'L', help: 'Open or close the level list' },
   { keys: ['g'], mod: true, action: { type: 'goToLevel' }, label: 'Ctrl/Cmd G', help: 'Go to a level' },
   { keys: ['z'], mod: true, shift: false, action: { type: 'undo' }, label: 'Ctrl/Cmd Z', help: 'Undo' },
   { keys: ['z'], mod: true, shift: true, action: { type: 'redo' }, label: 'Ctrl/Cmd Shift Z', help: 'Redo' },

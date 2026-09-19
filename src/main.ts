@@ -4,6 +4,7 @@ import { PointerInput, type PointerHandlers } from './input/PointerInput';
 import { CANVAS_H, CANVAS_W } from './render/layout';
 import { Renderer } from './render/Renderer';
 import { Game, type GameEvent, type Tool } from './shell/Game';
+import { LevelSelect } from './shell/LevelSelect';
 import { Modals } from './shell/Modal';
 import * as progress from './shell/progress';
 
@@ -16,6 +17,7 @@ const stats = $('stats');
 const solutionBar = $('solution-bar');
 const help = $('help');
 const buttons = {
+  levels: $<HTMLButtonElement>('btn-levels'),
   prev: $<HTMLButtonElement>('btn-prev'),
   next: $<HTMLButtonElement>('btn-next'),
   undo: $<HTMLButtonElement>('btn-undo'),
@@ -27,22 +29,32 @@ const buttons = {
   solutionApply: $<HTMLButtonElement>('btn-solution-apply'),
   dig: $<HTMLButtonElement>('btn-dig'),
   fill: $<HTMLButtonElement>('btn-fill'),
+  pipe: $<HTMLButtonElement>('btn-pipe'),
+  bomb: $<HTMLButtonElement>('btn-bomb'),
   fast: $<HTMLButtonElement>('btn-fast'),
 };
 
 const renderer = new Renderer(canvas);
 const modals = new Modals(document.body);
+const levelSelect = new LevelSelect(document.body, {
+  levels: () => LEVELS,
+  current: () => levelIndex,
+  solved: (id) => progress.solvedState(id),
+  pick: (i) => pickLevel(i),
+});
 
-let levelIndex = Math.min(Math.max(0, progress.currentLevel()), LEVELS.length - 1);
+let levelIndex = progress.currentLevel(LEVELS.map((l) => l.id));
 let tool: Tool = 'dig';
 let fast = false;
 let game = makeGame(levelIndex);
 let winTimer: number | null = null;
 let budgetNote = false;
+let outNote = false;
 
 function makeGame(index: number): Game {
   const g: Game = new Game(LEVELS[index], (e) => onGameEvent(g, e));
   // Tool and speed are the player's choice, not the level's.
+  if (!hasTool(g, tool)) tool = 'dig';
   g.tool = tool;
   g.fast = fast;
   return g;
@@ -54,7 +66,8 @@ function loadLevel(index: number): void {
   levelIndex = index;
   game = makeGame(index);
   budgetNote = false;
-  progress.setCurrentLevel(index);
+  outNote = false;
+  progress.setCurrentLevel(LEVELS[index].id, index);
   updateHud();
 }
 
@@ -66,11 +79,12 @@ function onGameEvent(g: Game, e: GameEvent): void {
     // Let the flowers open first, then say so.
     winTimer = window.setTimeout(() => {
       winTimer = null;
-      if (g === game && !modals.isOpen()) showWin();
+      if (g === game && !modals.isOpen() && !levelSelect.isOpen()) showWin();
     }, 900);
   }
-  if (e === 'no' || e === 'budget') navigator.vibrate?.(30);
+  if (e === 'no' || e === 'budget' || e === 'out') navigator.vibrate?.(30);
   if (e === 'budget') budgetNote = true;
+  if (e === 'out') outNote = true;
   updateHud();
 }
 
@@ -95,6 +109,14 @@ function askLevel(index: number): void {
   });
 }
 
+/** From the level list: only ask first when there are ditches to lose. */
+function pickLevel(index: number): void {
+  if (index === levelIndex) return;
+  const p = game.puzzle;
+  if (p.canUndo && !p.won) askLevel(index);
+  else loadLevel(index);
+}
+
 function askGoTo(): void {
   modals.open({
     title: 'Go to level',
@@ -110,7 +132,7 @@ function toggleSolution(): void {
   if (game.showSolution) return game.setSolution(false);
   modals.open({
     title: 'Show the solution?',
-    body: 'You will see where to dig (dashed squares) and what to fill (crosses). Your own ditches stay.',
+    body: 'You will see where to dig (dashed squares), what to fill (crosses), and where pipes, bombs and gate taps go. Your own ditches stay.',
     ok: { label: 'Show', run: () => game.setSolution(true) },
     extra: { label: 'Solve it for me', run: () => game.applySolution() },
     cancel: { label: 'Not now' },
@@ -122,7 +144,15 @@ function toggleHelp(show = help.hidden): void {
   buttons.help.classList.toggle('on', show);
 }
 
+/** Pipes and bombs only exist on levels that hand some out. */
+function hasTool(g: Game, t: Tool): boolean {
+  if (t === 'pipe') return g.puzzle.pipes !== null;
+  if (t === 'bomb') return g.puzzle.bombs !== null;
+  return true;
+}
+
 function setTool(t: Tool): void {
+  if (!hasTool(game, t)) return;
   tool = t;
   game.setTool(t);
 }
@@ -135,6 +165,7 @@ function toggleFast(): void {
 
 function restart(): void {
   budgetNote = false;
+  outNote = false;
   game.restart();
 }
 
@@ -158,6 +189,8 @@ function run(action: KeyAction): void {
       return askLevel(levelIndex - 1);
     case 'goToLevel':
       return askGoTo();
+    case 'levels':
+      return levelSelect.open();
     case 'undo':
       return game.undo();
     case 'redo':
@@ -176,6 +209,7 @@ document.addEventListener('keydown', (e) => {
     modals.handleKey(e);
     return;
   }
+  if (levelSelect.isOpen()) return levelSelect.handleKey(e);
   const action = actionForKey(e);
   if (!action) return;
   e.preventDefault();
@@ -185,7 +219,7 @@ document.addEventListener('keydown', (e) => {
 
 // Pointer events always go to whichever level is loaded now.
 const pointer: PointerHandlers = {
-  enabled: () => !modals.isOpen(),
+  enabled: () => !modals.isOpen() && !levelSelect.isOpen(),
   hover: (c) => game.hover(c),
   strokeStart: (c, mode) => game.strokeStart(c, mode),
   strokeCell: (c) => game.strokeCell(c),
@@ -193,6 +227,7 @@ const pointer: PointerHandlers = {
 };
 new PointerInput(canvas, pointer);
 
+buttons.levels.addEventListener('click', () => levelSelect.open());
 buttons.prev.addEventListener('click', () => askLevel(levelIndex - 1));
 buttons.next.addEventListener('click', () => askLevel(levelIndex + 1));
 buttons.undo.addEventListener('click', () => game.undo());
@@ -204,6 +239,8 @@ buttons.solutionHide.addEventListener('click', () => game.setSolution(false));
 buttons.solutionApply.addEventListener('click', () => game.applySolution());
 buttons.dig.addEventListener('click', () => setTool('dig'));
 buttons.fill.addEventListener('click', () => setTool('fill'));
+buttons.pipe.addEventListener('click', () => setTool('pipe'));
+buttons.bomb.addEventListener('click', () => setTool('bomb'));
 buttons.fast.addEventListener('click', () => toggleFast());
 $('help-close').addEventListener('click', () => toggleHelp(false));
 
@@ -229,7 +266,26 @@ function updateHud(): void {
     stats.append(digs);
   }
 
-  hint.textContent = budgetNote && left === 0 ? 'No digs left. Fill a square back in to get one back.' : lvl.hint;
+  const pipesLeft = p.pipesLeft();
+  const bombsLeft = p.bombsLeft();
+  for (const [label, n] of [
+    ['Pipes', pipesLeft],
+    ['Bombs', bombsLeft],
+  ] as const) {
+    if (n === null) continue;
+    const span = document.createElement('span');
+    span.textContent = ` · ${label} ${n}`;
+    span.classList.toggle('low', n === 0);
+    stats.append(span);
+  }
+  buttons.pipe.hidden = pipesLeft === null;
+  buttons.bomb.hidden = bombsLeft === null;
+
+  let note = lvl.hint;
+  if (budgetNote && left === 0) note = 'No digs left. Fill a square back in to get one back.';
+  else if (outNote && pipesLeft === 0 && tool === 'pipe') note = 'No pipes left. Tap a pipe to pick it back up.';
+  else if (outNote && bombsLeft === 0 && tool === 'bomb') note = 'No bombs left. Undo gets one back.';
+  hint.textContent = note;
   hint.hidden = game.showSolution;
   solutionBar.hidden = !game.showSolution;
   buttons.solution.classList.toggle('on', game.showSolution);
@@ -241,6 +297,8 @@ function updateHud(): void {
   for (const [b, on] of [
     [buttons.dig, tool === 'dig'],
     [buttons.fill, tool === 'fill'],
+    [buttons.pipe, tool === 'pipe'],
+    [buttons.bomb, tool === 'bomb'],
     [buttons.fast, fast],
   ] as const) {
     b.classList.toggle('on', on);
@@ -254,6 +312,12 @@ function buildHelp(): void {
     ['Drag', 'Dig a ditch (or fill, with the Fill tool)'],
     ['Right-drag', 'Fill ditches back in, whatever the tool'],
     ['Dig / Fill buttons', 'Pick the tool (on touch, this is how you fill)'],
+    ['Tap a gate', 'Open or shut it (any tool)'],
+    ['Pipe', 'Tap a rock or hole to lay one; tap it again to take it back'],
+    ['Bomb', 'Tap a rock: it and the rocks beside it break into sand'],
+    ['Sun squares', 'Water dries up there: keep sunny ditches short'],
+    ['Weeds', 'Drink from ditches touching them: two drink it all'],
+    ['Ice', 'A frozen spring: bring water to it and it melts'],
     ...KEYMAP.map((b) => [b.label, b.help] as [string, string]),
   ];
   for (const [k, what] of rows) {
@@ -310,6 +374,8 @@ if (import.meta.env.DEV) {
       tool,
       fast,
       digsUsed: p.digsUsed(),
+      pipesLeft: p.pipesLeft(),
+      bombsLeft: p.bombsLeft(),
       water: Number(p.field.totalWater().toFixed(3)),
       steps: p.field.steps,
       won: p.won,
