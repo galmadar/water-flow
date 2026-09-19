@@ -1,7 +1,5 @@
 # Water Flow — soul
 
-*Draft for Gal to approve.*
-
 ## What this toy is
 
 A sandy board, a spring, and some thirsty plants. You dig ditches so the spring
