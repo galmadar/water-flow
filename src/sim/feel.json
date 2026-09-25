@@ -1,0 +1,66 @@
+{
+  "first-drink-reach": {
+    "value": 42,
+    "tolerance": {
+      "percent": 5
+    },
+    "label": "water takes {n} ticks to reach the plant on First Drink",
+    "board": "First Drink"
+  },
+  "first-drink-bloom": {
+    "value": 496,
+    "tolerance": {
+      "percent": 5
+    },
+    "label": "the plant on First Drink blooms after {n} ticks",
+    "board": "First Drink"
+  },
+  "two-plants-bloom": {
+    "value": 750,
+    "tolerance": {
+      "percent": 5
+    },
+    "label": "both plants on Two Thirsty Plants bloom after {n} ticks",
+    "board": "Two Thirsty Plants"
+  },
+  "pond-spill": {
+    "value": 544,
+    "tolerance": {
+      "percent": 5
+    },
+    "label": "the pond on The Pond fills and spills over after {n} ticks",
+    "board": "The Pond"
+  },
+  "dry-maze-bloom": {
+    "value": 1830,
+    "tolerance": {
+      "percent": 5
+    },
+    "label": "both plants on Dry Maze bloom after {n} ticks",
+    "board": "Dry Maze"
+  },
+  "long-ditch-spread": {
+    "value": 16,
+    "tolerance": {
+      "abs": 1
+    },
+    "label": "after one second, water has run {n} squares down a long straight ditch",
+    "board": "Long Ditch"
+  },
+  "hole-drinks": {
+    "value": 97,
+    "tolerance": {
+      "percent": 5
+    },
+    "label": "on Mind the Hole, a straight ditch past the hole lets it swallow {n}% of the spring water in the first ten seconds",
+    "board": "Mind the Hole (the straight way)"
+  },
+  "hole-starves-plant": {
+    "value": 0,
+    "tolerance": {
+      "abs": 0
+    },
+    "label": "with the ditch running past the hole, the plant on Mind the Hole gets {n} percent of a drink in a minute",
+    "board": "Mind the Hole (the straight way)"
+  }
+}
